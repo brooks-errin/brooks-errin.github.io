@@ -24,25 +24,29 @@
 <model-viewer id="my-model"
               src="swordFinalCompressed.glb"
               alt="3D Model"
-              camera-controls
               interaction-prompt="none"
+              disable-zoom
+              disable-pan
               disable-tap
-              exposure="1"
               style="width: 80vw; height: 80vh;">
 </model-viewer>
 
 <script>
   const model = document.getElementById('my-model');
 
-  model.addEventListener('mouseenter', () => {
-    model.setAttribute('auto-rotate', '');
-  });
+  // Remove default interaction
+  model.removeAttribute('camera-controls');
 
-  model.addEventListener('mouseleave', () => {
-    model.removeAttribute('auto-rotate');
+  // Handle mouse movement
+  document.addEventListener('mousemove', (e) => {
+    const x = e.clientX / window.innerWidth - 0.5; // -0.5 to 0.5
+    const y = e.clientY / window.innerHeight - 0.5;
+
+    const azimuth = x * 180; // rotation left/right
+    const elevation = y * -30; // rotation up/down
+
+    model.cameraOrbit = `${azimuth}deg ${elevation}deg 2.5m`;
   });
 </script>
 
-
-</body>
 </html>
