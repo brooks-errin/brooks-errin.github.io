@@ -7,7 +7,7 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: #f0f0f0;
+      background: #111;
     }
     #viewer {
       width: 100vw;
@@ -24,15 +24,15 @@
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
     const canvas = document.getElementById('viewer');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 1.5, 3);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-    // Lighting
+    // Lights
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
     scene.add(hemiLight);
 
@@ -40,28 +40,25 @@
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    // Load model
+    // Load GLB model from your GitHub Pages repo
     const loader = new GLTFLoader();
     let model;
 
-    loader.load('swordFinalCompressed.glb', (gltf) => {
+    loader.load('https://brooks-errin.github.io/swordFinalCompressed.glb', (gltf) => {
       model = gltf.scene;
 
       // Center the model
       const box = new THREE.Box3().setFromObject(model);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      model.position.sub(center); // Move to center
-
-      // Optional rotation so the sword faces forward
-      model.rotation.y = Math.PI;
+      model.position.sub(center); // shift to center
 
       scene.add(model);
     }, undefined, (error) => {
-      console.error('Failed to load model:', error);
+      console.error('Error loading model:', error);
     });
 
-    // Mouse tracking
+    // Mouse-driven rotation
     let targetRotationX = 0;
     let targetRotationY = 0;
 
@@ -69,8 +66,8 @@
       const x = (event.clientX / window.innerWidth - 0.5) * 2;
       const y = (event.clientY / window.innerHeight - 0.5) * 2;
 
-      targetRotationY = x * Math.PI;        // left/right
-      targetRotationX = y * Math.PI * 0.1;  // up/down
+      targetRotationY = x * Math.PI;
+      targetRotationX = y * Math.PI * 0.1;
     });
 
     function animate() {
@@ -86,7 +83,7 @@
 
     animate();
 
-    // Resize handler
+    // Responsive
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
