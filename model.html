@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Custom 3D Model Viewer</title>
+  <title>3D Sword Viewer</title>
   <style>
     body {
       margin: 0;
@@ -28,47 +28,49 @@
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 1.5, 3);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    scene.add(light);
+    // Lighting
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    scene.add(hemiLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    let model;
+    // Load model
     const loader = new GLTFLoader();
-   loader.load('swordFinalCompressed.glb', (gltf) => {
-  model = gltf.scene;
+    let model;
 
-  // Center the model's geometry
-  const box = new THREE.Box3().setFromObject(model);
-  const center = new THREE.Vector3();
-  box.getCenter(center);
-  model.position.sub(center); // Move model to origin
+    loader.load('swordFinalCompressed.glb', (gltf) => {
+      model = gltf.scene;
 
-  // Optional: flip to face forward
-  model.rotation.y = Math.PI;
+      // Center the model
+      const box = new THREE.Box3().setFromObject(model);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      model.position.sub(center); // Move to center
 
-  scene.add(model);
-});
+      // Optional rotation so the sword faces forward
+      model.rotation.y = Math.PI;
 
+      scene.add(model);
     }, undefined, (error) => {
       console.error('Failed to load model:', error);
     });
 
+    // Mouse tracking
     let targetRotationX = 0;
     let targetRotationY = 0;
 
-    // Mouse tracking
     document.addEventListener('mousemove', (event) => {
       const x = (event.clientX / window.innerWidth - 0.5) * 2;
       const y = (event.clientY / window.innerHeight - 0.5) * 2;
-      targetRotationY = x * Math.PI;        // horizontal turn
-      targetRotationX = y * Math.PI * 0.1;  // slight vertical tilt
+
+      targetRotationY = x * Math.PI;        // left/right
+      targetRotationX = y * Math.PI * 0.1;  // up/down
     });
 
     function animate() {
@@ -84,6 +86,7 @@
 
     animate();
 
+    // Resize handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
