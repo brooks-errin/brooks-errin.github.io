@@ -36,19 +36,31 @@
     scene.add(pivot);
 
     const loader = new THREE.GLTFLoader();
-    loader.load('swordFinalCompressed.glb', function (gltf) {
-      model = gltf.scene;
+    const loader = new THREE.GLTFLoader();
+loader.load(
+  'swordFinalCompressed.glb',
+  function (gltf) {
+    console.log("✅ Model loaded successfully");
 
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      model.position.sub(center); // center the model
+    model = gltf.scene;
 
-      model.rotation.y = Math.PI; // optional flip
-      pivot.add(model);
-    }, undefined, function (error) {
-      console.error('Error loading model:', error);
-    });
+    const box = new THREE.Box3().setFromObject(model);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    model.position.sub(center); // center it
+
+    model.scale.set(0.5, 0.5, 0.5); // 🔧 Try scaling down if it's huge
+
+    model.rotation.y = Math.PI;
+
+    pivot.add(model);
+  },
+  undefined,
+  function (error) {
+    console.error('❌ Error loading model:', error);
+  }
+);
+
 
     let targetX = 0, targetY = 0;
     document.addEventListener('mousemove', function (e) {
