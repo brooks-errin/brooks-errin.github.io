@@ -25,6 +25,7 @@
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 1.5, 3);
 
+    // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
     scene.add(hemiLight);
 
@@ -32,24 +33,43 @@
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    let model, pivot = new THREE.Group();
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambient);
+
+    // Model & pivot
+    let model;
+    const pivot = new THREE.Group();
     scene.add(pivot);
 
+    // Load GLB model
     const loader = new THREE.GLTFLoader();
-    loader.load('https://brooks-errin.github.io/swordFinalCompressed.glb', function (gltf) {
-      model = gltf.scene;
+    loader.load(
+      'https://brooks-errin.github.io/swordFinalCompressed.glb',
+      function (gltf) {
+        model = gltf.scene;
 
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      model.position.sub(center); // center the model
+        // Center the model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        model.position.sub(center); // shift to center
 
-      model.rotation.y = Math.PI; // optional flip
-      pivot.add(model);
-    }, undefined, function (error) {
-      console.error('Error loading model:', error);
-    });
+        // Optional: scale down if model is huge
+        model.scale.set(0.5, 0.5, 0.5);
 
+        // Face model forward if needed
+        model.rotation.y = Math.PI;
+
+        pivot.add(model);
+        console.log("✅ Model loaded");
+      },
+      undefined,
+      function (error) {
+        console.error("❌ Error loading model:", error);
+      }
+    );
+
+    // Mouse-driven rotation
     let targetX = 0, targetY = 0;
     document.addEventListener('mousemove', function (e) {
       targetY = (e.clientX / window.innerWidth - 0.5) * Math.PI;
@@ -58,7 +78,7 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      if (model) {
+      if (pivot) {
         pivot.rotation.y += (targetY - pivot.rotation.y) * 0.05;
         pivot.rotation.x += (targetX - pivot.rotation.x) * 0.05;
       }
