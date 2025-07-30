@@ -36,7 +36,7 @@
     scene.add(pivot);
 
     const loader = new THREE.GLTFLoader();
-    loader.load('swordFinalCompressed.glb', function (gltf) {
+    loader.load('https://brooks-errin.github.io/swordFinalCompressed.glb', function (gltf) {
       model = gltf.scene;
 
       const box = new THREE.Box3().setFromObject(model);
