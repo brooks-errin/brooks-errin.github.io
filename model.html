@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>3D Sword Viewer</title>
+  <meta charset="UTF-8" />
+  <title>Custom 3D Viewer</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #111;
+      background-color: #000;
     }
-    #viewer {
-      width: 100vw;
-      height: 100vh;
+    canvas {
       display: block;
     }
   </style>
@@ -20,11 +18,11 @@
   <canvas id="viewer"></canvas>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
     const canvas = document.getElementById('viewer');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -32,7 +30,7 @@
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 1.5, 3);
 
-    // Lights
+    // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
     scene.add(hemiLight);
 
@@ -40,25 +38,28 @@
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    // Load GLB model from your GitHub Pages repo
-    const loader = new GLTFLoader();
     let model;
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://brooks-errin.github.io/swordFinalCompressed.glb',
+      (gltf) => {
+        model = gltf.scene;
 
-    loader.load('https://brooks-errin.github.io/swordFinalCompressed.glb', (gltf) => {
-      model = gltf.scene;
+        // Center model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        model.position.sub(center); // center it in the scene
 
-      // Center the model
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      model.position.sub(center); // shift to center
+        scene.add(model);
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading GLB:', error);
+      }
+    );
 
-      scene.add(model);
-    }, undefined, (error) => {
-      console.error('Error loading model:', error);
-    });
-
-    // Mouse-driven rotation
+    // Mouse tracking
     let targetRotationX = 0;
     let targetRotationY = 0;
 
@@ -83,7 +84,6 @@
 
     animate();
 
-    // Responsive
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
