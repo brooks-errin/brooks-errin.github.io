@@ -2,51 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Model Viewer</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <title>Custom 3D Model Viewer</title>
   <style>
     body {
       margin: 0;
+      overflow: hidden;
       background: #f0f0f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
     }
-    model-viewer {
-      width: 80vw;
-      height: 80vh;
+    #viewer {
+      width: 100vw;
+      height: 100vh;
+      display: block;
     }
   </style>
 </head>
 <body>
+  <canvas id="viewer"></canvas>
 
-<model-viewer id="my-model"
-              src="swordFinalCompressed.glb"
-              alt="3D Model"
-              interaction-prompt="none"
-              disable-zoom
-              disable-pan
-              disable-tap
-              style="width: 80vw; height: 80vh;">
-</model-viewer>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
-<script>
-  const model = document.getElementById('my-model');
+    const canvas = document.getElementById('viewer');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.5, 3);
 
-  // Remove default interaction
-  model.removeAttribute('camera-controls');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-  // Handle mouse movement
-  document.addEventListener('mousemove', (e) => {
-    const x = e.clientX / window.innerWidth - 0.5; // -0.5 to 0.5
-    const y = e.clientY / window.innerHeight - 0.5;
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    scene.add(light);
 
-    const azimuth = x * 180; // rotation left/right
-    const elevation = y * -30; // rotation up/down
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(3, 10, 10);
+    scene.add(dirLight);
 
-    model.cameraOrbit = `${azimuth}deg ${elevation}deg 2.5m`;
-  });
-</script>
+    let model;
+    const loader = new GLTFLoader();
+    loader.load('swordFinalCompressed.glb', (gltf) => {
+      model = gltf.scene;
+      model.rotation.y = Math.PI; // face forward
+      scene.add(model);
+    }, undefined, (error) => {
+      console.error('Failed to load model:', error);
+    });
 
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+
+    // Mouse tracking
+    document.addEventListener('mousemove', (event) => {
+      const x = (event.clientX / window.innerWidth - 0.5) * 2;
+      const y = (event.clientY / window.innerHeight - 0.5) * 2;
+      targetRotationY = x * Math.PI;        // horizontal turn
+      targetRotationX = y * Math.PI * 0.1;  // slight vertical tilt
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (model) {
+        model.rotation.y += (targetRotationY - model.rotation.y) * 0.05;
+        model.rotation.x += (targetRotationX - model.rotation.x) * 0.05;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
 </html>
