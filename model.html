@@ -41,10 +41,21 @@
 
     let model;
     const loader = new GLTFLoader();
-    loader.load('swordFinalCompressed.glb', (gltf) => {
-      model = gltf.scene;
-      model.rotation.y = Math.PI; // face forward
-      scene.add(model);
+   loader.load('swordFinalCompressed.glb', (gltf) => {
+  model = gltf.scene;
+
+  // Center the model's geometry
+  const box = new THREE.Box3().setFromObject(model);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  model.position.sub(center); // Move model to origin
+
+  // Optional: flip to face forward
+  model.rotation.y = Math.PI;
+
+  scene.add(model);
+});
+
     }, undefined, (error) => {
       console.error('Failed to load model:', error);
     });
